@@ -1,0 +1,984 @@
+/* ==========================================================================
+   8 Puzzle Solver — Claude AI Minimalist Stylesheet
+   Palette:
+     Background:     #F7F5F0 (Warm Cream)
+     Primary Text:   #292824 (Charcoal)
+     Secondary Text: #77746D (Warm Grey)
+     Accent:         #C47752 (Terracotta)
+     Cards:          #FFFFFF (Pure White)
+     Borders:        #E7E2D9 (Subtle Border)
+   No blue or purple. No excessive gradients.
+   ========================================================================== */
+
+:root {
+  --bg-app: #F7F5F0;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F2EFE9;
+  --bg-tile-slot: #EFECE4;
+  --bg-accent-soft: #F9EFE9;
+  --bg-hover: #ECE7DE;
+
+  --text-main: #292824;
+  --text-secondary: #77746D;
+  --text-muted: #9C978D;
+  --text-on-accent: #FFFFFF;
+
+  --accent-primary: #C47752;
+  --accent-hover: #B26541;
+  --accent-active: #9F5432;
+  --accent-subtle: #DFC7BA;
+
+  --border-light: #E7E2D9;
+  --border-medium: #D8D2C5;
+  --border-dark: #BDB6A8;
+  --border-accent: #C47752;
+
+  --status-solvable-bg: #EFF5ED;
+  --status-solvable-text: #3D6135;
+  --status-solvable-border: #D2E0CC;
+
+  --status-unsolvable-bg: #FAF0ED;
+  --status-unsolvable-text: #963821;
+  --status-unsolvable-border: #EFCECA;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 3px rgba(41, 40, 36, 0.04);
+  --shadow-tile: 0 2px 5px rgba(41, 40, 36, 0.06);
+
+  --font-serif: "Newsreader", "Charter", "Sitka Text", Cambria, Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Header Navigation
+   ========================================================================== */
+
+.app-header {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  background-color: var(--accent-primary);
+  border-radius: var(--radius-sm);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 4px;
+}
+
+.brand-icon span {
+  background-color: #FFFFFF;
+  border-radius: 1px;
+}
+
+.brand-icon span:last-child {
+  background-color: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+}
+
+.brand-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-status-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent-primary);
+}
+
+.github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.github-btn:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--border-medium);
+}
+
+/* ==========================================================================
+   Three-Section Desktop Workspace
+   ========================================================================== */
+
+.main-workspace {
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 310px 1fr 340px;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.workspace-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+}
+
+.panel-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.panel-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.panel-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* ==========================================================================
+   Puzzle Boards & Tiles
+   ========================================================================== */
+
+.board-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.puzzle-grid {
+  background-color: var(--bg-tile-slot);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Configuration Board (Left Col) */
+.puzzle-grid.editable {
+  width: 230px;
+  height: 230px;
+  padding: 8px;
+  gap: 8px;
+}
+
+/* Solver Simulation Board (Center Col) */
+.puzzle-grid.solver-size {
+  width: 290px;
+  height: 290px;
+  padding: 10px;
+  gap: 10px;
+}
+
+.puzzle-tile {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-main);
+  box-shadow: var(--shadow-tile);
+  cursor: default;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+  position: relative;
+}
+
+.puzzle-grid.solver-size .puzzle-tile {
+  font-size: 2.1rem;
+  border-radius: var(--radius-md);
+}
+
+/* Slideable Tile in Config Board */
+.puzzle-tile.slideable {
+  cursor: pointer;
+}
+
+.puzzle-tile.slideable:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(41, 40, 36, 0.08);
+}
+
+.puzzle-tile.slideable:active {
+  transform: translateY(0);
+}
+
+.puzzle-tile.slideable::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--accent-primary);
+  opacity: 0.6;
+}
+
+/* Tile recently moved in Simulation */
+.puzzle-tile.tile-moved {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-accent-soft);
+}
+
+/* Blank Tile (0) */
+.puzzle-tile.blank-tile {
+  background-color: var(--bg-subtle);
+  border: 1.5px dashed var(--border-medium);
+  box-shadow: none;
+  cursor: default;
+  color: var(--text-muted);
+}
+
+.puzzle-tile.blank-tile span {
+  font-size: 0.7rem;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+/* Goal Reference Mini Grid */
+.goal-reference-box {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.goal-ref-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.goal-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  width: 66px;
+  height: 66px;
+  background-color: var(--bg-tile-slot);
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.goal-ref-grid span {
+  background-color: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-main);
+  border-radius: 2px;
+}
+
+.goal-ref-grid span.blank {
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Buttons & Inputs
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-medium);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-accent);
+}
+
+.btn-primary:active {
+  background-color: var(--accent-active);
+}
+
+.btn-sm {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.action-btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.form-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.form-select:focus {
+  border-color: var(--accent-primary);
+}
+
+.input-action-row {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.input-action-row .form-input {
+  flex: 1;
+}
+
+.validation-msg {
+  font-size: 0.78rem;
+  min-height: 18px;
+}
+
+.validation-msg.error {
+  color: var(--status-unsolvable-text);
+}
+
+.validation-msg.success {
+  color: var(--status-solvable-text);
+}
+
+/* Solvability Parity Box */
+.parity-info-box {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.parity-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.parity-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.parity-count {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.solvable-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+}
+
+.solvable-tag.solvable {
+  background-color: var(--status-solvable-bg);
+  color: var(--status-solvable-text);
+  border: 1px solid var(--status-solvable-border);
+}
+
+.solvable-tag.unsolvable {
+  background-color: var(--status-unsolvable-bg);
+  color: var(--status-unsolvable-text);
+  border: 1px solid var(--status-unsolvable-border);
+}
+
+/* ==========================================================================
+   Center Section: Solver Controls & Simulation Stage
+   ========================================================================== */
+
+.header-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.exec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.exec-dot.ready { background-color: var(--text-muted); }
+.exec-dot.solving { background-color: var(--accent-primary); animation: pulse 1.2s infinite; }
+.exec-dot.solved { background-color: var(--status-solvable-text); }
+.exec-dot.unsolvable { background-color: var(--status-unsolvable-text); }
+
+@keyframes pulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.exec-status {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.simulation-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.active-move-indicator {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background-color: var(--bg-subtle);
+  padding: 0.25rem 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Scrubber Range */
+.scrubber-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+}
+
+.scrubber-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.scrubber-range {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--border-medium);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.scrubber-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 2px solid #FFFFFF;
+  cursor: pointer;
+}
+
+.scrubber-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 2px solid #FFFFFF;
+  cursor: pointer;
+}
+
+/* Toolbar Buttons */
+.solver-controls-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.btn-row-primary {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.5rem;
+}
+
+.btn-row-secondary {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: space-between;
+}
+
+.btn-row-secondary .btn {
+  flex: 1;
+}
+
+.btn-row-secondary .btn-icon {
+  flex: 0 0 34px;
+}
+
+.speed-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.speed-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.speed-select {
+  width: auto;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* ==========================================================================
+   Right Section: Live Results & Performance Comparison
+   ========================================================================== */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.metric-item {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-item.full-width {
+  grid-column: span 2;
+}
+
+.metric-key {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.metric-val {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.metric-val.text-sm {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Heuristic Comparison */
+.comparison-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 0.85rem;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comparison-title {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.data-table th {
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+
+.data-table td {
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr.active-row {
+  background-color: var(--bg-accent-soft);
+}
+
+.table-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 1rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Charts */
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.chart-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.chart-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.chart-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.chart-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+
+.chart-bar-name { color: var(--text-secondary); }
+.chart-bar-val { font-family: var(--font-mono); font-weight: 600; color: var(--text-main); }
+
+.chart-bar-track {
+  height: 8px;
+  background-color: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.chart-bar-fill.dim { background-color: var(--border-dark); }
+.chart-bar-fill.mid { background-color: var(--accent-subtle); }
+
+.pruning-note {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  min-height: 16px;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .workspace-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .col-results {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-workspace {
+    padding: 1rem;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .col-results {
+    grid-column: auto;
+  }
+
+  .puzzle-grid.solver-size {
+    width: 260px;
+    height: 260px;
+  }
+
+  .puzzle-grid.solver-size .puzzle-tile {
+    font-size: 1.8rem;
+  }
+
+  .btn-row-primary {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-row-secondary {
+    flex-wrap: wrap;
+  }
+
+  .header-inner {
+    padding: 0.75rem 1rem;
+  }
+}

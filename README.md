@@ -40,16 +40,17 @@ An intelligent 8-Puzzle Solver implemented in Python using the **A* Search Algor
 
 ## 🚀 How to Run
 
-### Prerequisites
-- Python 3.7+ installed.
+### Option 1: Modern Interactive Web Application (Recommended for Viva)
+- **Direct in Browser**: Double-click or open [`index.html`](index.html) directly in any modern browser (Chrome, Edge, Firefox, Safari).
+- **With Python Web Server**:
+  ```bash
+  python server.py
+  ```
+  Open `http://localhost:8000` in your browser. The web server directly integrates with `proj.py`.
 
-### Steps
+### Option 2: Console / CLI Solver
 ```bash
-# Clone the repository
-git clone https://github.com/Devarajb049/8_Queen_Solver.git
-cd 8_Queen_Solver
-
-# Run the solver
+# Run the CLI solver
 python proj.py
 ```
 
@@ -59,6 +60,12 @@ python proj.py
 ---
 
 ## 📁 Repository Contents
-- [`proj.py`](proj.py): Complete Python implementation of the solver, heuristics, and visual output.
+- [`index.html`](index.html): Modern Claude AI-inspired web interface with responsive dashboard.
+- [`styles.css`](styles.css): Minimalist warm cream and charcoal stylesheet without neon or gradients.
+- [`solver.js`](solver.js): Pure algorithmic module faithfully porting `proj.py` search logic and heuristics.
+- [`worker.js`](worker.js): Background Web Worker for non-blocking state-space search.
+- [`app.js`](app.js): Application controller for live interactive boards, animations, charts, and stepping.
+- [`server.py`](server.py): Zero-dependency Python HTTP server integrating directly with `proj.py`.
+- [`proj.py`](proj.py): Complete Python implementation of the solver, heuristics, and console visual output.
 - [`DOCUMENTATION.md`](DOCUMENTATION.md): Full academic mini project documentation and report.
 - [`DOCUMENTATION.pdf`](DOCUMENTATION.pdf): Formatted printable PDF version of the project documentation.

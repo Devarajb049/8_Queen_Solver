@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8 Puzzle Solver</title>
+  <meta name="description" content="Production-quality 8-Puzzle Solver using A* Search Algorithm with Misplaced Tiles, Manhattan Distance, and Enhanced Manhattan with Linear Conflict heuristics.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-icon" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">8 Puzzle Solver</h1>
+          <span class="brand-subtitle">A* Search Algorithm</span>
+        </div>
+      </div>
+
+      <nav class="header-nav">
+        <span class="nav-status-badge" id="backendBadge">
+          <span class="status-dot"></span> <span id="backendBadgeText">A* Engine Ready</span>
+        </span>
+        <a href="https://github.com/Devarajb049/8_Queen_Solver" target="_blank" rel="noopener noreferrer" class="github-btn" title="View Source on GitHub">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+          <span>Repository</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Three-Section Workspace -->
+  <main class="main-workspace" role="main">
+    <div class="workspace-grid">
+
+      <!-- ===================================================================
+           LEFT SECTION: Puzzle Configuration
+           =================================================================== -->
+      <section class="workspace-col col-config" aria-labelledby="heading-config">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 id="heading-config" class="panel-title">Puzzle Configuration</h2>
+            <span class="panel-badge">Input</span>
+          </div>
+
+          <div class="panel-body">
+            <!-- Interactive 3x3 Config Board -->
+            <div class="board-wrapper">
+              <div class="board-label">Interactive Board (Click tile to slide)</div>
+              <div id="configBoard" class="puzzle-grid editable" role="grid" aria-label="3 by 3 Configuration Board">
+                <!-- Rendered dynamically via JS -->
+              </div>
+            </div>
+
+            <!-- Preset Action Buttons -->
+            <div class="action-btn-group">
+              <button type="button" class="btn btn-sm" id="btnDefaultPuzzle" title="Load sample puzzle from proj.py">
+                Default Puzzle
+              </button>
+              <button type="button" class="btn btn-sm" id="btnBenchmarkPuzzle" title="Load 22-move benchmark puzzle">
+                Benchmark (22 Moves)
+              </button>
+              <button type="button" class="btn btn-sm" id="btnRandomPuzzle" title="Generate a valid solvable puzzle configuration">
+                Random Solvable
+              </button>
+              <button type="button" class="btn btn-sm" id="btnResetBoard" title="Reset board to solved goal state">
+                Reset to Goal
+              </button>
+            </div>
+
+            <!-- Manual Sequence Input -->
+            <div class="form-group custom-sequence-group">
+              <label for="customInput" class="form-label">Sequence (9 numbers, 0 = Blank):</label>
+              <div class="input-action-row">
+                <input type="text" id="customInput" class="form-input" value="1 2 3 4 0 6 7 5 8" placeholder="e.g. 1 2 3 4 0 6 7 5 8" spellcheck="false" autocomplete="off">
+                <button type="button" class="btn" id="btnApplyCustom">Load</button>
+              </div>
+              <div id="validationMessage" class="validation-msg" aria-live="polite"></div>
+            </div>
+
+            <!-- Solvability and Inversion Parity Card -->
+            <div class="parity-info-box" aria-live="polite">
+              <div class="parity-meta">
+                <span class="parity-title">Inversion Parity</span>
+                <span class="parity-count" id="inversionText">2 (Even)</span>
+              </div>
+              <span id="solvabilityStatus" class="solvable-tag solvable">✓ Solvable</span>
+            </div>
+
+            <!-- Goal Reference -->
+            <div class="goal-reference-box">
+              <div class="goal-ref-header">Target Goal State:</div>
+              <div class="goal-ref-grid" aria-hidden="true">
+                <span>1</span><span>2</span><span>3</span>
+                <span>4</span><span>5</span><span>6</span>
+                <span>7</span><span>8</span><span class="blank">0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           CENTER SECTION: Puzzle Solver & Live Simulation
+           =================================================================== -->
+      <section class="workspace-col col-solver" aria-labelledby="heading-solver">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 id="heading-solver" class="panel-title">Puzzle Solver</h2>
+            <div class="header-status-indicator">
+              <span id="execIndicator" class="exec-dot ready" aria-hidden="true"></span>
+              <span id="execStatusText" class="exec-status">Ready</span>
+            </div>
+          </div>
+
+          <div class="panel-body">
+
+            <!-- Algorithm Selection Dropdown -->
+            <div class="form-group">
+              <label for="algorithmSelect" class="form-label">A* Heuristic Algorithm:</label>
+              <select id="algorithmSelect" class="form-select" aria-label="Select A* Heuristic">
+                <option value="enhanced" selected>Enhanced Manhattan + Linear Conflict (h3) — Recommended</option>
+                <option value="manhattan">Manhattan Distance (h2)</option>
+                <option value="misplaced">Misplaced Tiles (h1)</option>
+              </select>
+            </div>
+
+            <!-- Main Interactive Simulation Board -->
+            <div class="simulation-stage">
+              <div class="active-move-indicator" id="currentMoveBanner">State: Ready to solve</div>
+              <div id="solverBoard" class="puzzle-grid solver-size" role="grid" aria-label="Live Simulation 8-Puzzle Board">
+                <!-- Rendered dynamically via JS -->
+              </div>
+            </div>
+
+            <!-- Step Scrubber Slider -->
+            <div class="scrubber-container">
+              <div class="scrubber-meta">
+                <span id="scrubberStepLabel" class="scrubber-label">Step 0 of 0</span>
+                <span id="scrubberPercentLabel" class="scrubber-pct">0%</span>
+              </div>
+              <input type="range" id="simulationSlider" class="scrubber-range" min="0" max="0" value="0" disabled aria-label="Simulation Step Slider">
+            </div>
+
+            <!-- Primary Execution & Playback Buttons -->
+            <div class="solver-controls-toolbar" role="toolbar" aria-label="Simulation Controls">
+
+              <!-- Top Primary Action Row -->
+              <div class="btn-row-primary">
+                <button type="button" class="btn btn-primary" id="btnStartSolve" title="Execute A* Search Algorithm">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  Start Solving
+                </button>
+
+                <button type="button" class="btn" id="btnStepByStep" disabled title="Advance solution by exactly one step">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="13 17 18 12 13 7"/>
+                    <polyline points="6 17 11 12 6 7"/>
+                  </svg>
+                  Step-by-Step
+                </button>
+              </div>
+
+              <!-- Secondary Navigation Row -->
+              <div class="btn-row-secondary">
+                <button type="button" class="btn btn-icon" id="btnPrevStep" disabled title="Previous Step (Left Arrow)" aria-label="Previous Step">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+
+                <button type="button" class="btn" id="btnAutoPlay" disabled title="Start Automatic Playback (Spacebar)">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  Auto Play
+                </button>
+
+                <button type="button" class="btn" id="btnPause" disabled title="Pause Playback (Spacebar)">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                  </svg>
+                  Pause
+                </button>
+
+                <button type="button" class="btn btn-icon" id="btnNextStep" disabled title="Next Step (Right Arrow)" aria-label="Next Step">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+
+                <button type="button" class="btn btn-icon" id="btnResetSim" disabled title="Rewind Simulation to Start" aria-label="Reset Simulation">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Speed Control -->
+              <div class="speed-control-row">
+                <label for="speedSelector" class="speed-label">Speed:</label>
+                <select id="speedSelector" class="form-select speed-select" aria-label="Animation Speed">
+                  <option value="800">Slow (0.8s)</option>
+                  <option value="400" selected>Normal (0.4s)</option>
+                  <option value="150">Fast (0.15s)</option>
+                </select>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           RIGHT SECTION: Live Results & Performance Comparison
+           =================================================================== -->
+      <section class="workspace-col col-results" aria-labelledby="heading-results">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 id="heading-results" class="panel-title">Live Results</h2>
+            <span class="panel-badge" id="resultsStatusBadge">Idle</span>
+          </div>
+
+          <div class="panel-body">
+
+            <!-- Metrics Cards Grid -->
+            <div class="metrics-grid">
+              <div class="metric-item">
+                <span class="metric-key">Current Step</span>
+                <span class="metric-val" id="metricCurrentStep">0</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-key">Total Moves</span>
+                <span class="metric-val" id="metricTotalMoves">—</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-key">Nodes Explored</span>
+                <span class="metric-val" id="metricNodesExplored">—</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-key">Execution Time</span>
+                <span class="metric-val" id="metricExecutionTime">—</span>
+              </div>
+              <div class="metric-item full-width">
+                <span class="metric-key">Active Heuristic</span>
+                <span class="metric-val text-sm" id="metricActiveHeuristic">Enhanced Manhattan (h3)</span>
+              </div>
+              <div class="metric-item full-width">
+                <span class="metric-key">Solution Status</span>
+                <span class="metric-val text-sm" id="metricSolutionStatus">Ready</span>
+              </div>
+            </div>
+
+            <!-- Performance Comparison Section -->
+            <div class="comparison-section">
+              <div class="comparison-header">
+                <h3 class="comparison-title">Heuristics Comparison</h3>
+                <button type="button" class="btn btn-sm" id="btnRunShootout" title="Run and compare all three heuristics on current puzzle">
+                  Compare All 3
+                </button>
+              </div>
+
+              <!-- Comparison Table -->
+              <div class="table-wrapper">
+                <table class="data-table" aria-label="Heuristic Performance Comparison Table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Heuristic</th>
+                      <th scope="col">Moves</th>
+                      <th scope="col">Expanded</th>
+                      <th scope="col">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="shootoutTableBody">
+                    <tr>
+                      <td colspan="4" class="table-empty">Run search to populate real results.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bar Chart of Expanded Nodes -->
+              <div class="chart-container">
+                <div class="chart-title">Nodes Explored (Fewer is Better)</div>
+                <div id="nodesChartBars" class="chart-bars-list">
+                  <!-- Rendered via JS -->
+                </div>
+              </div>
+
+              <div id="pruningNotice" class="pruning-note" aria-live="polite"></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Core Scripts -->
+  <script src="solver.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
