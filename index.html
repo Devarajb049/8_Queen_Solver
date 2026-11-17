@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>8 Puzzle Solver</title>
-  <meta name="description" content="Production-quality 8-Puzzle Solver using A* Search Algorithm with Misplaced Tiles, Manhattan Distance, and Enhanced Manhattan with Linear Conflict heuristics.">
+  <meta name="description" content="Interactive 8-Puzzle Solver using A* Search Algorithm comparing Misplaced Tiles, Manhattan Distance, and Linear Conflict heuristics.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -56,7 +56,7 @@
             <!-- Interactive 3x3 Config Board -->
             <div class="board-wrapper">
               <div class="board-label">Interactive Board (Click tile to slide)</div>
-              <div id="configBoard" class="puzzle-grid editable" role="grid" aria-label="3 by 3 Configuration Board">
+              <div id="configBoard" class="puzzle-grid editable" role="region" aria-label="3 by 3 Configuration Board">
                 <!-- Rendered dynamically via JS -->
               </div>
             </div>
@@ -138,7 +138,7 @@
             <!-- Main Interactive Simulation Board -->
             <div class="simulation-stage">
               <div class="active-move-indicator" id="currentMoveBanner">State: Ready to solve</div>
-              <div id="solverBoard" class="puzzle-grid solver-size" role="grid" aria-label="Live Simulation 8-Puzzle Board">
+              <div id="solverBoard" class="puzzle-grid solver-size" role="region" aria-label="Live Simulation 8-Puzzle Board">
                 <!-- Rendered dynamically via JS -->
               </div>
             </div>

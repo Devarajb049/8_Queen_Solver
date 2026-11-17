@@ -89,25 +89,32 @@
       const tileVal = boardState[i];
       const row = Math.floor(i / 3);
       const col = i % 3;
-      const tileEl = document.createElement('div');
-      tileEl.className = 'puzzle-tile';
+      const isAdjacent = Math.abs(row - blankRow) + Math.abs(col - blankCol) === 1;
 
+      let tileEl;
       if (tileVal === 0) {
-        tileEl.classList.add('blank-tile');
+        tileEl = document.createElement('div');
+        tileEl.className = 'puzzle-tile blank-tile';
+        tileEl.setAttribute('aria-hidden', 'true');
         tileEl.innerHTML = '<span>0</span>';
-      } else {
+      } else if (isAdjacent && !state.isPlaying && !state.isSolving) {
+        tileEl = document.createElement('button');
+        tileEl.type = 'button';
+        tileEl.className = 'puzzle-tile slideable';
         tileEl.textContent = tileVal;
-
+        tileEl.setAttribute('aria-label', `Slide tile ${tileVal}`);
+        tileEl.title = `Click or press Enter/Space to slide tile ${tileVal}`;
+        tileEl.addEventListener('click', () => onTileSlide(i));
         if (movedTile !== null && tileVal === movedTile) {
           tileEl.classList.add('tile-moved');
         }
-
-        // Both boards allow tile clicking when not actively running
-        const isAdjacent = Math.abs(row - blankRow) + Math.abs(col - blankCol) === 1;
-        if (isAdjacent && !state.isPlaying && !state.isSolving) {
-          tileEl.classList.add('slideable');
-          tileEl.title = `Click to slide tile ${tileVal}`;
-          tileEl.addEventListener('click', () => onTileSlide(i));
+      } else {
+        tileEl = document.createElement('div');
+        tileEl.className = 'puzzle-tile';
+        tileEl.textContent = tileVal;
+        tileEl.setAttribute('aria-label', `Tile ${tileVal}`);
+        if (movedTile !== null && tileVal === movedTile) {
+          tileEl.classList.add('tile-moved');
         }
       }
 
@@ -342,6 +349,7 @@
 
     if (result.moves === 0) {
       setExecutionStatus('solved', 'Solved', 'Puzzle is already at the goal state!');
+      if (dom.pruningNotice) dom.pruningNotice.innerHTML = '';
     } else {
       setExecutionStatus('solved', 'Solved', `Optimal path: ${result.moves} moves (${result.expanded.toLocaleString()} nodes in ${result.durationMs.toFixed(1)} ms)`);
     }
@@ -395,12 +403,14 @@
     }
 
     // Pruning Notice
-    if (dom.pruningNotice && results.misplaced && results.enhanced) {
-      const base = results.misplaced.expanded;
-      const enh = results.enhanced.expanded;
-      if (base > 0) {
+    if (dom.pruningNotice) {
+      if (results && results.misplaced && results.enhanced && results.misplaced.expanded > 0) {
+        const base = results.misplaced.expanded;
+        const enh = results.enhanced.expanded;
         const saved = (((base - enh) / base) * 100).toFixed(1);
         dom.pruningNotice.innerHTML = `<strong>Pruning:</strong> Enhanced Manhattan pruned <strong>${saved}%</strong> of node expansions compared to Misplaced Tiles.`;
+      } else {
+        dom.pruningNotice.innerHTML = '';
       }
     }
   }
@@ -649,7 +659,8 @@
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
-      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'BUTTON') return;
       if (e.key === 'ArrowRight') {
         e.preventDefault();
         nextStep();
@@ -667,29 +678,35 @@
     });
   }
 
-  function checkBackend() {
-    if (!dom.backendBadgeText) return;
-    fetch('/api/health')
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'ok') {
-          dom.backendBadgeText.textContent = 'Python proj.py Backend Active';
-        }
-      })
-      .catch(() => {
-        dom.backendBadgeText.textContent = 'A* Engine Ready';
-      });
-  }
-
   // Initialize
   function init() {
     cacheDOM();
     registerEvents();
     updateUI();
-    checkBackend();
 
-    // Populate initial benchmark data without starting playback so user can press "Start Solving"
-    startSolving(false);
+    // Populate initial comparison table and metrics quietly without marking state as solved
+    try {
+      const shootoutRes = PuzzleSolver.shootout(state.initialState);
+      state.shootoutResults = shootoutRes;
+      const active = shootoutRes[state.selectedHeuristic] || shootoutRes.enhanced;
+      state.solutionPath = active.path || [];
+      state.currentStepIndex = 0;
+      state.currentState = state.initialState.slice();
+
+      if (dom.metricTotalMoves) dom.metricTotalMoves.textContent = active.moves;
+      if (dom.metricNodesExplored) dom.metricNodesExplored.textContent = active.expanded.toLocaleString();
+      if (dom.metricExecutionTime) dom.metricExecutionTime.textContent = `${active.durationMs.toFixed(1)} ms`;
+      if (dom.metricActiveHeuristic) dom.metricActiveHeuristic.textContent = active.heuristicName;
+
+      renderComparisonTableAndChart(shootoutRes);
+      updateUI();
+    } catch (e) {
+      console.warn('Initial search computation:', e);
+    }
+
+    setExecutionStatus('ready', 'Ready', 'Click "Start Solving" or "Step-by-Step" to solve');
+    if (dom.resultsStatusBadge) dom.resultsStatusBadge.textContent = 'Ready';
+    if (dom.currentMoveBanner) dom.currentMoveBanner.textContent = 'State: Ready to solve';
   }
 
   if (document.readyState === 'loading') {

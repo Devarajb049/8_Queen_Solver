@@ -61,7 +61,7 @@
 
   /**
    * 3. Enhanced Manhattan with Linear Conflict (h3)
-   * Student-designed heuristic: Manhattan distance + 2 * disjoint linear conflicts.
+   * Adapted from Hansson, Mayer and Yung (1992): Manhattan distance + 2 * disjoint linear conflicts.
    * Preserves admissibility while providing superior search pruning.
    */
   function enhancedManhattan(state) {
@@ -206,6 +206,15 @@
           error: `Expected 9 numbers, but found ${tokens.length}.`,
           state: null
         };
+      }
+      for (let i = 0; i < tokens.length; i++) {
+        if (!/^\d+$/.test(tokens[i])) {
+          return {
+            valid: false,
+            error: `Invalid token "${tokens[i]}". All entries must be integers from 0 to 8.`,
+            state: null
+          };
+        }
       }
       arr = tokens.map(t => parseInt(t, 10));
     } else {
@@ -613,16 +622,16 @@
       description: 'Standard benchmark puzzle evaluated in the project documentation.'
     },
     'medium': {
-      name: 'Intermediate Test (Depth 14)',
+      name: 'Intermediate Test (Depth 4)',
       state: [1, 2, 3, 5, 0, 6, 4, 7, 8],
-      depth: 14,
+      depth: 4,
       description: 'Moderate complexity problem demonstrating linear conflicts.'
     },
     'quick': {
-      name: 'Quick Test (Depth 4)',
+      name: 'Quick Test (Depth 3)',
       state: [1, 2, 3, 0, 4, 6, 7, 5, 8],
-      depth: 4,
-      description: 'Short 4-move puzzle for instant stepping demonstrations.'
+      depth: 3,
+      description: 'Short 3-move puzzle for instant stepping demonstrations.'
     },
     'goal': {
       name: 'Goal State',

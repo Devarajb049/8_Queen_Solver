@@ -119,6 +119,7 @@ python proj.py
 
 ### Option 2: Modern Interactive Web Application
 - **Direct in Browser**: Double-click or open [`index.html`](index.html) directly in any modern web browser.
+- **Live on GitHub Pages**: The entire web app runs client-side with zero dependencies, so it can be deployed directly via GitHub Pages (Settings → Pages → Branch: `main` → `/root`). Once enabled, visit `https://<username>.github.io/8_Queen_Solver/`.
 - **With Python Web Server**:
   ```bash
   python server.py

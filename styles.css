@@ -20,7 +20,7 @@
 
   --text-main: #292824;
   --text-secondary: #77746D;
-  --text-muted: #9C978D;
+  --text-muted: #6B675F;
   --text-on-accent: #FFFFFF;
 
   --accent-primary: #C47752;
@@ -321,6 +321,20 @@ body {
   position: relative;
 }
 
+button.puzzle-tile {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+.puzzle-tile:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  z-index: 2;
+}
+
 .puzzle-grid.solver-size .puzzle-tile {
   font-size: 2.1rem;
   border-radius: var(--radius-md);
@@ -452,6 +466,11 @@ body {
   transform: scale(0.98);
 }
 
+.btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -514,12 +533,13 @@ body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  outline: none;
   transition: border-color var(--transition-fast);
 }
 
-.form-input:focus {
+.form-input:focus-visible {
   border-color: var(--accent-primary);
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
 
 .form-select {
@@ -531,13 +551,14 @@ body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  outline: none;
   cursor: pointer;
   transition: border-color var(--transition-fast);
 }
 
-.form-select:focus {
+.form-select:focus-visible {
   border-color: var(--accent-primary);
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
 
 .input-action-row {
@@ -691,8 +712,12 @@ body {
   height: 6px;
   background: var(--border-medium);
   border-radius: 3px;
-  outline: none;
   cursor: pointer;
+}
+
+.scrubber-range:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
 }
 
 .scrubber-range::-webkit-slider-thumb {
@@ -980,5 +1005,18 @@ body {
 
   .header-inner {
     padding: 0.75rem 1rem;
+  }
+}
+
+/* ==========================================================================
+   Accessibility & Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
