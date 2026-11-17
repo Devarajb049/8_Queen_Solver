@@ -467,10 +467,12 @@
         expanded: 0,
         discovered: 1,
         moves: 0,
+        initialH: 0,
         durationMs: Math.max(0.01, endTime - startTime),
         heuristicName,
         heuristicKey,
-        isGoalAlready: true
+        isGoalAlready: true,
+        solvable: true
       };
     }
 
@@ -540,6 +542,7 @@
           expanded,
           discovered: bestG.size,
           moves: path.length,
+          initialH,
           durationMs: endTime - startTime,
           heuristicName,
           heuristicKey,
@@ -591,6 +594,7 @@
       expanded,
       discovered: bestG.size,
       moves: null,
+      initialH,
       durationMs: endTime - startTime,
       heuristicName,
       heuristicKey,

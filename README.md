@@ -131,29 +131,16 @@ python proj.py
 
 ### Option 2: Modern Interactive Web Application
 - **Direct in Browser**: Double-click or open [`index.html`](index.html) directly in any modern web browser.
-- **Live on GitHub Pages**: The entire web app runs client-side with zero dependencies, so it can be deployed directly via GitHub Pages (Settings → Pages → Branch: `main` → `/root`). Once enabled, visit `https://<username>.github.io/8_Queen_Solver/`.
-- **With Python Web Server**:
-  ```bash
-  python server.py
-  ```
-  Open `http://localhost:8000` in your browser.
-- **With Node.js Web Server**:
-  ```bash
-  node serve.js
-  ```
-  Open `http://localhost:3000` in your browser.
+- **Live on GitHub Pages**: The entire web app runs purely client-side with zero dependencies, so it can be deployed directly via GitHub Pages (Settings → Pages → Branch: `main` → `/root`). Once enabled, visit `https://<username>.github.io/8_Queen_Solver/`.
 
 ---
 
 ## 📁 Repository Contents
 - [`proj.py`](proj.py): Complete Python implementation of the solver, heuristics, and console visual output.
 - [`index.html`](index.html): Modern interactive web interface with responsive dashboard.
-- [`styles.css`](styles.css): Minimalist stylesheet for the web interface.
+- [`styles.css`](styles.css): Modern stylesheet with dark and light themes for the web interface.
 - [`solver.js`](solver.js): Pure JavaScript algorithmic module matching `proj.py` search logic and heuristics.
-- [`worker.js`](worker.js): Background Web Worker for non-blocking search in the browser.
 - [`app.js`](app.js): Application controller for live interactive boards, animations, charts, and step navigation.
-- [`server.py`](server.py): Zero-dependency Python HTTP server integrating directly with `proj.py`.
-- [`serve.js`](serve.js): Lightweight Node.js static file server.
 - [`DOCUMENTATION.md`](DOCUMENTATION.md): Full academic mini project documentation and report.
 - [`DOCUMENTATION.pdf`](DOCUMENTATION.pdf): Formatted printable PDF version of the project documentation.
 
