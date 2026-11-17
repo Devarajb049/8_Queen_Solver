@@ -36,6 +36,18 @@ An intelligent 8-Puzzle Solver implemented in Python using the **A* Search Algor
 
 *All three heuristics discover the exact same optimal 22-move path, but Enhanced Manhattan expands over 6x fewer nodes than Misplaced Tiles!*
 
+### Linear Conflict Demo: `3 1 2 4 5 6 7 8 0` (Solution Depth: 16 moves)
+
+Demonstrating the distinction between **Heuristic Values $h(n)$** and **Actual Solution Moves $g^*(n)$**:
+
+| Heuristic | Heuristic Calculation | Heuristic Value ($h$) | Actual Moves ($g^*$) | Nodes Explored | Execution Time |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Misplaced Tiles ($`h_1`$)** | `1 + 1 + 1` | 3 | **16** | 597 | ~4.1 ms |
+| **Manhattan Distance ($`h_2`$)** | `1 + 1 + 2` | 4 | **16** | 230 | ~3.5 ms |
+| **Enhanced Manhattan ($`h_3`$)** | `4 + (2 × 1)` | 6 | **16** | **157** | **~1.0 ms** |
+
+> **Key Takeaway:** The heuristic value $h(n)$ estimates remaining cost ($3 \le 4 \le 6 \le 16$), whereas the actual solution moves $g^*(n)$ is the true shortest path length (**16 moves**). Enhanced Manhattan provides the tightest lower bound, leading to the fewest explored nodes (157 vs 597, a **73.7% reduction**).
+
 ---
 
 ## 💻 Sample Output

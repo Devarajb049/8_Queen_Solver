@@ -63,11 +63,14 @@
 
             <!-- Preset Action Buttons -->
             <div class="action-btn-group">
-              <button type="button" class="btn btn-sm" id="btnDefaultPuzzle" title="Load sample puzzle from proj.py">
-                Default Puzzle
+              <button type="button" class="btn btn-sm btn-highlight" id="btnDemoPuzzle" title="Load Linear Conflict Demo (3 1 2 4 5 6 7 8 0)">
+                Demo (16 Moves)
               </button>
               <button type="button" class="btn btn-sm" id="btnBenchmarkPuzzle" title="Load 22-move benchmark puzzle">
                 Benchmark (22 Moves)
+              </button>
+              <button type="button" class="btn btn-sm" id="btnDefaultPuzzle" title="Load 2-move sample puzzle">
+                Sample (2 Moves)
               </button>
               <button type="button" class="btn btn-sm" id="btnRandomPuzzle" title="Generate a valid solvable puzzle configuration">
                 Random Solvable
@@ -81,7 +84,7 @@
             <div class="form-group custom-sequence-group">
               <label for="customInput" class="form-label">Sequence (9 numbers, 0 = Blank):</label>
               <div class="input-action-row">
-                <input type="text" id="customInput" class="form-input" value="1 2 3 4 0 6 7 5 8" placeholder="e.g. 1 2 3 4 0 6 7 5 8" spellcheck="false" autocomplete="off">
+                <input type="text" id="customInput" class="form-input" value="3 1 2 4 5 6 7 8 0" placeholder="e.g. 3 1 2 4 5 6 7 8 0" spellcheck="false" autocomplete="off">
                 <button type="button" class="btn" id="btnApplyCustom">Load</button>
               </div>
               <div id="validationMessage" class="validation-msg" aria-live="polite"></div>
@@ -133,6 +136,26 @@
                 <option value="manhattan">Manhattan Distance (h2)</option>
                 <option value="misplaced">Misplaced Tiles (h1)</option>
               </select>
+            </div>
+
+            <!-- Live Step Status Bar during Simulation -->
+            <div class="live-step-status-bar" aria-label="Current Simulation Status">
+              <div class="step-pill">
+                <span class="step-pill-label">Step</span>
+                <span class="step-pill-val" id="metricCurrentStep">0</span>
+              </div>
+              <div class="step-pill">
+                <span class="step-pill-label">Total Moves</span>
+                <span class="step-pill-val" id="metricTotalMoves">16</span>
+              </div>
+              <div class="step-pill">
+                <span class="step-pill-label">Active Algorithm</span>
+                <span class="step-pill-val text-sm" id="metricActiveHeuristic">Enhanced Manhattan (h3)</span>
+              </div>
+              <div class="step-pill">
+                <span class="step-pill-label">Status</span>
+                <span class="step-pill-val text-sm" id="metricSolutionStatus">Ready</span>
+              </div>
             </div>
 
             <!-- Main Interactive Simulation Board -->
@@ -227,86 +250,168 @@
       </section>
 
       <!-- ===================================================================
-           RIGHT SECTION: Live Results & Performance Comparison
+           RIGHT SECTION: Heuristic vs Actual Results Dashboard
            =================================================================== -->
       <section class="workspace-col col-results" aria-labelledby="heading-results">
-        <div class="panel-card">
+
+        <!-- CARD 1: Heuristic Calculation Results -->
+        <div class="panel-card results-card" id="cardHeuristics">
           <div class="panel-header">
-            <h2 id="heading-results" class="panel-title">Live Results</h2>
-            <span class="panel-badge" id="resultsStatusBadge">Idle</span>
+            <div class="panel-title-wrap">
+              <h2 id="heading-results" class="panel-title">1. Heuristic Calculation Results</h2>
+              <span class="panel-subtitle">Pre-search lower-bound estimates (h)</span>
+            </div>
+            <span class="panel-badge badge-h">h(n) Estimates</span>
           </div>
 
           <div class="panel-body">
-
-            <!-- Metrics Cards Grid -->
-            <div class="metrics-grid">
-              <div class="metric-item">
-                <span class="metric-key">Current Step</span>
-                <span class="metric-val" id="metricCurrentStep">0</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-key">Total Moves</span>
-                <span class="metric-val" id="metricTotalMoves">—</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-key">Nodes Explored</span>
-                <span class="metric-val" id="metricNodesExplored">—</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-key">Execution Time</span>
-                <span class="metric-val" id="metricExecutionTime">—</span>
-              </div>
-              <div class="metric-item full-width">
-                <span class="metric-key">Active Heuristic</span>
-                <span class="metric-val text-sm" id="metricActiveHeuristic">Enhanced Manhattan (h3)</span>
-              </div>
-              <div class="metric-item full-width">
-                <span class="metric-key">Solution Status</span>
-                <span class="metric-val text-sm" id="metricSolutionStatus">Ready</span>
-              </div>
+            <div class="table-wrapper">
+              <table class="data-table" aria-label="Heuristic Calculation Results Table">
+                <thead>
+                  <tr>
+                    <th scope="col">Heuristic</th>
+                    <th scope="col">Calculation</th>
+                    <th scope="col" class="text-right">Result</th>
+                  </tr>
+                </thead>
+                <tbody id="heuristicCalcTableBody">
+                  <tr>
+                    <td><strong>Misplaced Tiles</strong></td>
+                    <td><code>1 + 1 + 1</code></td>
+                    <td class="text-right font-mono font-bold">3</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Manhattan Distance</strong></td>
+                    <td><code>1 + 1 + 2</code></td>
+                    <td class="text-right font-mono font-bold">4</td>
+                  </tr>
+                  <tr class="highlight-row">
+                    <td><strong>Enhanced Manhattan</strong></td>
+                    <td><code>4 + (2 × 1)</code></td>
+                    <td class="text-right font-mono font-bold text-accent">6</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <!-- Performance Comparison Section -->
-            <div class="comparison-section">
-              <div class="comparison-header">
-                <h3 class="comparison-title">Heuristics Comparison</h3>
-                <button type="button" class="btn btn-sm" id="btnRunShootout" title="Run and compare all three heuristics on current puzzle">
-                  Compare All 3
-                </button>
-              </div>
-
-              <!-- Comparison Table -->
-              <div class="table-wrapper">
-                <table class="data-table" aria-label="Heuristic Performance Comparison Table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Heuristic</th>
-                      <th scope="col">Moves</th>
-                      <th scope="col">Expanded</th>
-                      <th scope="col">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody id="shootoutTableBody">
-                    <tr>
-                      <td colspan="4" class="table-empty">Run search to populate real results.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Bar Chart of Expanded Nodes -->
-              <div class="chart-container">
-                <div class="chart-title">Nodes Explored (Fewer is Better)</div>
-                <div id="nodesChartBars" class="chart-bars-list">
-                  <!-- Rendered via JS -->
-                </div>
-              </div>
-
-              <div id="pruningNotice" class="pruning-note" aria-live="polite"></div>
+            <div class="heuristic-note-box">
+              <span class="note-icon" aria-hidden="true">✦</span>
+              <span class="note-text" id="linearConflictNote">
+                <strong>Linear Conflict in Row 1:</strong> Tiles <code>3, 1, 2</code> all belong in row 1, but tile <code>3</code> is to the left of <code>1</code> &amp; <code>2</code>, adding <strong>+2 bypass moves</strong> to Manhattan distance.
+              </span>
             </div>
-
           </div>
         </div>
+
+        <!-- CARD 2: Actual Solution Results -->
+        <div class="panel-card results-card" id="cardActualResults">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <h2 class="panel-title">2. Actual Solution Results</h2>
+              <span class="panel-subtitle">A* search graph traversal</span>
+            </div>
+            <span class="panel-badge badge-g">g(n) Actual Moves</span>
+          </div>
+
+          <div class="panel-body">
+            <!-- Highlight Actual Moves (16) -->
+            <div class="actual-moves-highlight" aria-live="polite">
+              <div class="moves-tag">A* Optimal Solution</div>
+              <div class="moves-number" id="highlightActualMoves">16 Actual Moves</div>
+              <div class="moves-desc" id="highlightActualMovesDesc">
+                All 3 admissible heuristics find the exact same <strong>16-move</strong> optimal path (<em>g* = 16</em>).
+              </div>
+            </div>
+
+            <!-- Actual Results Table -->
+            <div class="table-wrapper">
+              <table class="data-table" aria-label="Actual A* Solution Results Table">
+                <thead>
+                  <tr>
+                    <th scope="col">Heuristic</th>
+                    <th scope="col" class="text-right">Actual Moves</th>
+                    <th scope="col" class="text-right">Nodes Explored</th>
+                    <th scope="col" class="text-right">Execution Time</th>
+                  </tr>
+                </thead>
+                <tbody id="shootoutTableBody">
+                  <!-- Dynamically populated via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Comparison Chart for Nodes Explored -->
+            <div class="chart-container">
+              <div class="chart-header-row">
+                <span class="chart-title">Nodes Explored (Fewer is Better)</span>
+                <span class="efficiency-pill" id="efficiencyBadge">Enhanced Manhattan is Most Efficient</span>
+              </div>
+              <div id="nodesChartBars" class="chart-bars-list">
+                <!-- Dynamically populated via JS -->
+              </div>
+            </div>
+
+            <div id="pruningNotice" class="pruning-note" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Explanation & A* Formula -->
+        <div class="panel-card results-card" id="cardExplanation">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <h2 class="panel-title">3. Core Concepts &amp; A* Formula</h2>
+              <span class="panel-subtitle">Theoretical foundations</span>
+            </div>
+            <span class="panel-badge">Theory</span>
+          </div>
+
+          <div class="panel-body">
+            <!-- Prominent Formula -->
+            <div class="formula-banner">
+              <div class="formula-tag">A* Evaluation Function</div>
+              <div class="formula-equation" aria-label="f of n equals g of n plus h of n">f(n) = g(n) + h(n)</div>
+              <div class="formula-legend">
+                <div class="legend-item"><strong class="var-name">f(n)</strong> Total estimated cost of path through state <em>n</em></div>
+                <div class="legend-item"><strong class="var-name">g(n)</strong> Actual moves taken from start state to state <em>n</em></div>
+                <div class="legend-item"><strong class="var-name">h(n)</strong> Estimated remaining moves from state <em>n</em> to goal</div>
+              </div>
+            </div>
+
+            <!-- Definitions List -->
+            <div class="definitions-list">
+              <div class="def-row">
+                <span class="def-term">Heuristic Value (h):</span>
+                <span class="def-desc">Estimated remaining cost to reach the goal state.</span>
+              </div>
+              <div class="def-row">
+                <span class="def-term">Actual Moves (g):</span>
+                <span class="def-desc">Number of moves actually taken to reach the goal state.</span>
+              </div>
+              <div class="def-row">
+                <span class="def-term">Nodes Explored:</span>
+                <span class="def-desc">Number of puzzle states expanded by the algorithm.</span>
+              </div>
+              <div class="def-row">
+                <span class="def-term">Execution Time:</span>
+                <span class="def-desc">Time taken by the algorithm to find the solution.</span>
+              </div>
+            </div>
+
+            <!-- Important Distinction Alert -->
+            <div class="distinction-alert">
+              <div class="distinction-title">
+                <span aria-hidden="true">⚠️</span>
+                <strong>Important Distinction:</strong>
+              </div>
+              <p class="distinction-text">
+                Never confuse <strong>heuristic values (3, 4, 6)</strong> with <strong>actual solution moves (16)</strong>.
+                The heuristic value <em>h(n)</em> is an initial lower-bound estimate computed before or during search (<em>h ≤ g*</em>).
+                The actual moves (16) represent the true minimal path length (<em>g</em>) discovered once A* reaches the goal state.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </section>
 
     </div>

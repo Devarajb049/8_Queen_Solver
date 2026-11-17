@@ -163,6 +163,54 @@
   }
 
   /**
+   * Get detailed mathematical breakdown of heuristic calculations for a given state.
+   * Returns individual component calculations and total estimates (h).
+   */
+  function getHeuristicBreakdown(state) {
+    // 1. Misplaced Tiles
+    const misplacedList = [];
+    for (let i = 0; i < 9; i++) {
+      const tile = state[i];
+      if (tile !== 0 && tile !== GOAL[i]) {
+        misplacedList.push(1);
+      }
+    }
+    const misplacedCalc = misplacedList.length > 0 ? misplacedList.join(' + ') : '0';
+    const misplacedVal = misplacedList.length;
+
+    // 2. Manhattan Distance
+    const manhattanParts = [];
+    let manhattanSum = 0;
+    for (let i = 0; i < 9; i++) {
+      const tile = state[i];
+      if (tile === 0) continue;
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      const [gr, gc] = GOAL_POS[tile];
+      const dist = Math.abs(row - gr) + Math.abs(col - gc);
+      if (dist > 0) {
+        manhattanParts.push({ tile, dist });
+        manhattanSum += dist;
+      }
+    }
+    manhattanParts.sort((a, b) => a.dist - b.dist || a.tile - b.tile);
+    const manhattanCalc = manhattanParts.length > 0 ? manhattanParts.map(p => p.dist).join(' + ') : '0';
+
+    // 3. Enhanced Manhattan (with Linear Conflict)
+    const enhVal = enhancedManhattan(state);
+    const conflictCount = Math.round((enhVal - manhattanSum) / 2);
+    const enhCalc = conflictCount > 0 
+      ? (manhattanSum + ' + (2 \u00D7 ' + conflictCount + ')') 
+      : (manhattanSum + ' + 0');
+
+    return {
+      misplaced: { name: 'Misplaced Tiles', code: 'h1', calc: misplacedCalc, val: misplacedVal },
+      manhattan: { name: 'Manhattan Distance', code: 'h2', calc: manhattanCalc, val: manhattanSum },
+      enhanced: { name: 'Enhanced Manhattan', code: 'h3', calc: enhCalc, val: enhVal, conflicts: conflictCount }
+    };
+  }
+
+  /**
    * Count inversions in the puzzle state (ignoring blank tile 0).
    */
   function countInversions(state) {
@@ -609,6 +657,12 @@
 
   // Pre-configured academic sample puzzles
   const PRESET_PUZZLES = {
+    'demo': {
+      name: 'Linear Conflict Demo (Depth 16)',
+      state: [3, 1, 2, 4, 5, 6, 7, 8, 0],
+      depth: 16,
+      description: 'Demonstrates the clear difference between heuristic estimates (3, 4, 6) and actual solution moves (16).'
+    },
     'sample': {
       name: 'Default Sample (proj.py)',
       state: [1, 2, 3, 4, 0, 6, 7, 5, 8],
@@ -649,6 +703,7 @@
     misplacedTiles,
     manhattanDistance,
     enhancedManhattan,
+    getHeuristicBreakdown,
     inspectLinearConflicts,
     countInversions,
     isSolvable,

@@ -325,6 +325,27 @@ A shootout was conducted across two distinct test cases to demonstrate heuristic
 | **Manhattan Distance ($`h_2`$)** | 22 | 2,375 | 3,683 | 73.8% reduction |
 | **Enhanced Manhattan ($`h_3`$)** | 22 | **1,487** | **2,329** | **83.6% reduction** |
 
+#### Test Case 3: Initial State Heuristic vs. Actual Solution Moves (`3 1 2 4 5 6 7 8 0`, Depth 16)
+
+##### Heuristic Calculation Breakdown (Initial State $h$):
+| Heuristic | Formula / Calculation | Initial Estimate $h(s_0)$ |
+| :--- | :--- | :---: |
+| **Misplaced Tiles ($h_1$)** | Tiles 1, 2, 3 out of place: $1 + 1 + 1$ | **3** |
+| **Manhattan Distance ($h_2$)** | Distances: $1 + 1 + 2$ | **4** |
+| **Enhanced Manhattan ($h_3$)** | Manhattan + Linear Conflict: $4 + (2 \times 1)$ | **6** |
+
+##### Actual A* Search Results (Optimal Traversal $g^*$):
+| Heuristic | Actual Moves ($g^*$) | Nodes Explored | Execution Time |
+| :--- | :---: | :---: | :---: |
+| **Misplaced Tiles ($h_1$)** | **16** | 597 | ~4.1 ms |
+| **Manhattan Distance ($h_2$)** | **16** | 230 | ~3.5 ms |
+| **Enhanced Manhattan ($h_3$)** | **16** | **157** | **~1.0 ms** |
+
+> **Crucial Conceptual Distinction:**
+> - **Heuristic Value $h(n)$:** A lower-bound estimate of remaining moves ($3 \le 4 \le 6 \le 16$).
+> - **Actual Solution Moves $g^*(n)$:** The true minimum number of legal sliding steps to reach the goal (**16**).
+> - All three admissible heuristics reach the exact same 16-move optimal path, but Enhanced Manhattan explores 73.7% fewer nodes than Misplaced Tiles.
+
 #### Key Findings:
 1. **Identical Solution Length:** All three heuristics discovered the exact same optimal path length (22 moves), verifying admissibility.
 2. **Heuristic Dominance:** Because $h_3(n) \ge h_2(n) \ge h_1(n)$ for all states $n$, Enhanced Manhattan dominates the other two, expanding **6.1 times fewer nodes** than Misplaced Tiles and **37.4% fewer nodes** than standard Manhattan Distance.

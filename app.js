@@ -11,8 +11,8 @@
 
   // Application State
   const state = {
-    initialState: [1, 2, 3, 4, 0, 6, 7, 5, 8], // Default sample from proj.py
-    currentState: [1, 2, 3, 4, 0, 6, 7, 5, 8],
+    initialState: [3, 1, 2, 4, 5, 6, 7, 8, 0], // Default demo puzzle with Linear Conflict (16 moves)
+    currentState: [3, 1, 2, 4, 5, 6, 7, 8, 0],
     selectedHeuristic: 'enhanced', // 'enhanced', 'manhattan', 'misplaced'
     solutionPath: [], // Array of { state, move, movedTile, g, h, f }
     currentStepIndex: 0,
@@ -30,8 +30,9 @@
   function cacheDOM() {
     // Left Panel: Configuration
     dom.configBoard = document.getElementById('configBoard');
-    dom.btnDefaultPuzzle = document.getElementById('btnDefaultPuzzle');
+    dom.btnDemoPuzzle = document.getElementById('btnDemoPuzzle');
     dom.btnBenchmarkPuzzle = document.getElementById('btnBenchmarkPuzzle');
+    dom.btnDefaultPuzzle = document.getElementById('btnDefaultPuzzle');
     dom.btnRandomPuzzle = document.getElementById('btnRandomPuzzle');
     dom.btnResetBoard = document.getElementById('btnResetBoard');
     dom.customInput = document.getElementById('customInput');
@@ -58,19 +59,25 @@
     dom.btnResetSim = document.getElementById('btnResetSim');
     dom.speedSelector = document.getElementById('speedSelector');
 
-    // Right Panel: Live Results
-    dom.resultsStatusBadge = document.getElementById('resultsStatusBadge');
+    // Center Panel: Live Step Status Bar
     dom.metricCurrentStep = document.getElementById('metricCurrentStep');
     dom.metricTotalMoves = document.getElementById('metricTotalMoves');
-    dom.metricNodesExplored = document.getElementById('metricNodesExplored');
-    dom.metricExecutionTime = document.getElementById('metricExecutionTime');
     dom.metricActiveHeuristic = document.getElementById('metricActiveHeuristic');
     dom.metricSolutionStatus = document.getElementById('metricSolutionStatus');
-    dom.btnRunShootout = document.getElementById('btnRunShootout');
+
+    // Right Panel: Card 1 (Heuristic Calculation Results)
+    dom.heuristicCalcTableBody = document.getElementById('heuristicCalcTableBody');
+    dom.linearConflictNote = document.getElementById('linearConflictNote');
+
+    // Right Panel: Card 2 (Actual Solution Results)
+    dom.highlightActualMoves = document.getElementById('highlightActualMoves');
+    dom.highlightActualMovesDesc = document.getElementById('highlightActualMovesDesc');
     dom.shootoutTableBody = document.getElementById('shootoutTableBody');
     dom.nodesChartBars = document.getElementById('nodesChartBars');
+    dom.efficiencyBadge = document.getElementById('efficiencyBadge');
     dom.pruningNotice = document.getElementById('pruningNotice');
-    dom.backendBadgeText = document.getElementById('backendBadgeText');
+    dom.resultsStatusBadge = document.getElementById('resultsStatusBadge');
+    dom.btnRunShootout = document.getElementById('btnRunShootout');
   }
 
   /**
@@ -153,6 +160,132 @@
   }
 
   /**
+   * Render Card 1: Heuristic Calculation Results Table
+   * Displays dynamic pre-search heuristic estimates h(n)
+   */
+  function renderHeuristicCalculationTable(boardState) {
+    if (!dom.heuristicCalcTableBody || !PuzzleSolver.getHeuristicBreakdown) return;
+    const breakdown = PuzzleSolver.getHeuristicBreakdown(boardState);
+    if (!breakdown) return;
+
+    dom.heuristicCalcTableBody.innerHTML = `
+      <tr>
+        <td><strong>${breakdown.misplaced.name}</strong></td>
+        <td><code class="calc-code">${breakdown.misplaced.calc}</code></td>
+        <td class="text-right font-mono font-bold">${breakdown.misplaced.val}</td>
+      </tr>
+      <tr>
+        <td><strong>${breakdown.manhattan.name}</strong></td>
+        <td><code class="calc-code">${breakdown.manhattan.calc}</code></td>
+        <td class="text-right font-mono font-bold">${breakdown.manhattan.val}</td>
+      </tr>
+      <tr class="highlight-row">
+        <td><strong>${breakdown.enhanced.name}</strong></td>
+        <td><code class="calc-code">${breakdown.enhanced.calc}</code></td>
+        <td class="text-right font-mono font-bold text-accent">${breakdown.enhanced.val}</td>
+      </tr>
+    `;
+
+    if (dom.linearConflictNote) {
+      if (breakdown.enhanced.conflicts > 0) {
+        dom.linearConflictNote.innerHTML = `<strong>Linear Conflict Detected:</strong> Found <strong>${breakdown.enhanced.conflicts}</strong> disjoint conflicting pair(s), adding <strong>+${breakdown.enhanced.conflicts * 2} bypass moves</strong> to Manhattan distance (Total h3 = ${breakdown.enhanced.val}).`;
+      } else {
+        dom.linearConflictNote.innerHTML = `<strong>No Linear Conflicts:</strong> No conflicting tiles in goal rows/columns. Enhanced Manhattan equals standard Manhattan distance (${breakdown.manhattan.val}).`;
+      }
+    }
+  }
+
+  /**
+   * Render Card 2: Actual Solution Results Table & Comparison Chart
+   * Displays the empirical A* search traversal results (Actual Moves g*, Nodes Explored, Time)
+   */
+  function renderComparisonTableAndChart(results) {
+    if (!results) return;
+
+    const list = [
+      { key: 'misplaced', label: 'Misplaced Tiles', code: 'h1', data: results.misplaced },
+      { key: 'manhattan', label: 'Manhattan Distance', code: 'h2', data: results.manhattan },
+      { key: 'enhanced', label: 'Enhanced Manhattan', code: 'h3', data: results.enhanced, isChampion: true }
+    ];
+
+    // Highlight the actual solution moves (16) clearly
+    const actualMoves = results.enhanced ? results.enhanced.moves : (results.manhattan ? results.manhattan.moves : 0);
+    if (dom.highlightActualMoves) {
+      dom.highlightActualMoves.textContent = `${actualMoves} Actual Moves`;
+    }
+    if (dom.highlightActualMovesDesc) {
+      dom.highlightActualMovesDesc.innerHTML = `All 3 admissible heuristics find the exact same <strong>${actualMoves}-move</strong> optimal path (<em>g* = ${actualMoves}</em>).`;
+    }
+
+    // Populate Actual Solution Results Table
+    if (dom.shootoutTableBody) {
+      dom.shootoutTableBody.innerHTML = list.map(item => {
+        const isActive = item.key === state.selectedHeuristic;
+        const champBadge = item.isChampion ? ' <span class="mini-champion-badge">Best</span>' : '';
+        return `
+          <tr class="${isActive ? 'active-row' : ''} ${item.isChampion ? 'highlight-row' : ''}">
+            <td><strong>${item.label}</strong>${champBadge}</td>
+            <td class="text-right font-mono font-bold">${item.data.moves}</td>
+            <td class="text-right font-mono">${item.data.expanded.toLocaleString()}</td>
+            <td class="text-right font-mono">${item.data.durationMs.toFixed(1)} ms</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Comparison chart for nodes explored by all three heuristics
+    if (dom.nodesChartBars) {
+      const maxNodes = Math.max(...list.map(it => it.data.expanded), 1);
+      dom.nodesChartBars.innerHTML = list.map(item => {
+        const val = item.data.expanded;
+        const widthPct = Math.max(8, (val / maxNodes) * 100);
+        const isChamp = item.isChampion;
+        const barClass = isChamp ? 'champion-bar' : (item.key === 'manhattan' ? 'mid' : 'dim');
+        const badge = isChamp ? ' <span class="mini-champion-badge">Fewest Nodes</span>' : '';
+        return `
+          <div class="chart-bar-item ${isChamp ? 'champion-item' : ''}">
+            <div class="chart-bar-label">
+              <span class="chart-bar-name"><strong>${item.label}</strong>${badge}</span>
+              <span class="chart-bar-val font-mono font-bold">${val.toLocaleString()} nodes</span>
+            </div>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill ${barClass}" style="width: ${widthPct.toFixed(1)}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Efficiency Pill / Banner
+    if (dom.efficiencyBadge) {
+      if (results.misplaced && results.enhanced && results.misplaced.expanded > 0) {
+        const base = results.misplaced.expanded;
+        const enh = results.enhanced.expanded;
+        const saved = (((base - enh) / base) * 100).toFixed(1);
+        dom.efficiencyBadge.textContent = `Enhanced Manhattan is Most Efficient (-${saved}% nodes)`;
+      } else {
+        dom.efficiencyBadge.textContent = 'Enhanced Manhattan is Most Efficient';
+      }
+    }
+
+    // Efficiency & Pruning Detail Note
+    if (dom.pruningNotice) {
+      if (results.misplaced && results.enhanced && results.misplaced.expanded > 0) {
+        const base = results.misplaced.expanded;
+        const enh = results.enhanced.expanded;
+        const saved = (((base - enh) / base) * 100).toFixed(1);
+        const vsMan = results.manhattan && results.manhattan.expanded > 0
+          ? (((results.manhattan.expanded - enh) / results.manhattan.expanded) * 100).toFixed(1)
+          : null;
+        const vsManText = vsMan ? ` and <strong>${vsMan}%</strong> fewer than Manhattan Distance` : '';
+        dom.pruningNotice.innerHTML = `<strong>Efficiency Champion:</strong> Enhanced Manhattan explored only <strong>${enh.toLocaleString()} nodes</strong> (${saved}% fewer nodes than Misplaced Tiles${vsManText}) to discover the exact same <strong>${actualMoves}-move</strong> optimal solution.`;
+      } else {
+        dom.pruningNotice.innerHTML = '';
+      }
+    }
+  }
+
+  /**
    * Update full UI
    */
   function updateUI() {
@@ -186,6 +319,9 @@
         dom.solvabilityStatus.textContent = '✕ Unsolvable';
       }
     }
+
+    // Card 1: Render Heuristic Calculation Breakdown for current initial state
+    renderHeuristicCalculationTable(state.initialState);
 
     // Playback and step controls
     updatePlaybackControls();
@@ -254,7 +390,7 @@
     if (dom.btnPause) dom.btnPause.disabled = !state.isPlaying;
     if (dom.btnResetSim) dom.btnResetSim.disabled = !hasPath || curr === 0;
 
-    // Metrics panel updates
+    // Center simulation bar step
     if (dom.metricCurrentStep) {
       dom.metricCurrentStep.textContent = curr;
     }
@@ -341,10 +477,8 @@
     state.currentStepIndex = 0;
     state.currentState = state.initialState.slice();
 
-    // Populate Metrics
+    // Populate Center Simulation Metrics
     if (dom.metricTotalMoves) dom.metricTotalMoves.textContent = result.moves;
-    if (dom.metricNodesExplored) dom.metricNodesExplored.textContent = result.expanded.toLocaleString();
-    if (dom.metricExecutionTime) dom.metricExecutionTime.textContent = `${result.durationMs.toFixed(1)} ms`;
     if (dom.metricActiveHeuristic) dom.metricActiveHeuristic.textContent = result.heuristicName;
 
     if (result.moves === 0) {
@@ -355,64 +489,6 @@
     }
 
     updateUI();
-  }
-
-  /**
-   * Render Heuristics Comparison Table & Visual Bar Chart
-   */
-  function renderComparisonTableAndChart(results) {
-    if (!results || !dom.shootoutTableBody) return;
-
-    const list = [
-      { key: 'enhanced', label: 'Enhanced Manhattan (h3)', data: results.enhanced },
-      { key: 'manhattan', label: 'Manhattan Distance (h2)', data: results.manhattan },
-      { key: 'misplaced', label: 'Misplaced Tiles (h1)', data: results.misplaced }
-    ];
-
-    dom.shootoutTableBody.innerHTML = list.map(item => {
-      const isActive = item.key === state.selectedHeuristic;
-      return `
-        <tr class="${isActive ? 'active-row' : ''}">
-          <td><strong>${item.label}</strong></td>
-          <td>${item.data.moves}</td>
-          <td>${item.data.expanded.toLocaleString()}</td>
-          <td>${item.data.durationMs.toFixed(1)} ms</td>
-        </tr>
-      `;
-    }).join('');
-
-    // Render Bar Chart
-    if (dom.nodesChartBars) {
-      const maxNodes = Math.max(...list.map(it => it.data.expanded), 1);
-      dom.nodesChartBars.innerHTML = list.map(item => {
-        const val = item.data.expanded;
-        const widthPct = Math.max(5, (val / maxNodes) * 100);
-        const colorClass = item.key === 'enhanced' ? '' : (item.key === 'manhattan' ? 'mid' : 'dim');
-        return `
-          <div class="chart-bar-item">
-            <div class="chart-bar-label">
-              <span class="chart-bar-name">${item.label}</span>
-              <span class="chart-bar-val">${val.toLocaleString()} nodes</span>
-            </div>
-            <div class="chart-bar-track">
-              <div class="chart-bar-fill ${colorClass}" style="width: ${widthPct}%;"></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Pruning Notice
-    if (dom.pruningNotice) {
-      if (results && results.misplaced && results.enhanced && results.misplaced.expanded > 0) {
-        const base = results.misplaced.expanded;
-        const enh = results.enhanced.expanded;
-        const saved = (((base - enh) / base) * 100).toFixed(1);
-        dom.pruningNotice.innerHTML = `<strong>Pruning:</strong> Enhanced Manhattan pruned <strong>${saved}%</strong> of node expansions compared to Misplaced Tiles.`;
-      } else {
-        dom.pruningNotice.innerHTML = '';
-      }
-    }
   }
 
   /**
@@ -506,18 +582,19 @@
    */
   function registerEvents() {
     // Preset Buttons
-    if (dom.btnDefaultPuzzle) {
-      dom.btnDefaultPuzzle.addEventListener('click', () => {
+    if (dom.btnDemoPuzzle) {
+      dom.btnDemoPuzzle.addEventListener('click', () => {
         pausePlayback();
-        const p = PuzzleSolver.PRESET_PUZZLES.sample.state;
+        const p = PuzzleSolver.PRESET_PUZZLES.demo ? PuzzleSolver.PRESET_PUZZLES.demo.state : [3, 1, 2, 4, 5, 6, 7, 8, 0];
         state.initialState = p.slice();
         state.currentState = p.slice();
         state.solutionPath = [];
         state.currentStepIndex = 0;
         state.shootoutResults = null;
         updateUI();
-        setExecutionStatus('ready', 'Default Sample Loaded', 'Click "Start Solving" to animate');
-        showValidationMessage('Default puzzle loaded (2 moves to goal).', true);
+        setExecutionStatus('ready', 'Demo Loaded', 'Linear conflict demo loaded (16 moves)');
+        showValidationMessage('Demo puzzle loaded: 3 1 2 / 4 5 6 / 7 8 0 (16 optimal moves).', true);
+        startSolving(false);
       });
     }
 
@@ -533,6 +610,23 @@
         updateUI();
         setExecutionStatus('ready', 'Benchmark Loaded', 'Depth 22 benchmark puzzle loaded');
         showValidationMessage('Benchmark puzzle loaded (22 optimal moves).', true);
+        startSolving(false);
+      });
+    }
+
+    if (dom.btnDefaultPuzzle) {
+      dom.btnDefaultPuzzle.addEventListener('click', () => {
+        pausePlayback();
+        const p = PuzzleSolver.PRESET_PUZZLES.sample.state;
+        state.initialState = p.slice();
+        state.currentState = p.slice();
+        state.solutionPath = [];
+        state.currentStepIndex = 0;
+        state.shootoutResults = null;
+        updateUI();
+        setExecutionStatus('ready', 'Sample Loaded', 'Click "Start Solving" to animate');
+        showValidationMessage('Default puzzle loaded (2 moves to goal).', true);
+        startSolving(false);
       });
     }
 
@@ -546,8 +640,9 @@
         state.currentStepIndex = 0;
         state.shootoutResults = null;
         updateUI();
-        setExecutionStatus('ready', 'Random Solvable Puzzle', 'Generated 26 random valid moves from goal');
+        setExecutionStatus('ready', 'Random Solvable Puzzle', 'Generated random valid moves from goal');
         showValidationMessage('Random solvable puzzle generated.', true);
+        startSolving(false);
       });
     }
 
@@ -563,6 +658,7 @@
         updateUI();
         setExecutionStatus('ready', 'Goal State', 'Target solved configuration');
         showValidationMessage('Reset to solved goal state.', true);
+        startSolving(false);
       });
     }
 
@@ -587,6 +683,7 @@
         if (res.solvable) {
           showValidationMessage('Custom configuration loaded.', true);
           setExecutionStatus('ready', 'Custom Loaded', 'Ready to solve');
+          startSolving(false);
         } else {
           showValidationMessage(res.error, false);
           setExecutionStatus('unsolvable', 'Unsolvable', res.error);
@@ -615,7 +712,6 @@
     // Main Start Solving Button (with auto-play animation!)
     if (dom.btnStartSolve) {
       dom.btnStartSolve.addEventListener('click', () => {
-        // If simulation already ran and is at the end, rewind to 0 first
         if (state.solutionPath && state.solutionPath.length > 0 && state.currentStepIndex >= state.solutionPath.length) {
           goToStep(0);
         }
@@ -682,6 +778,7 @@
   function init() {
     cacheDOM();
     registerEvents();
+    renderHeuristicCalculationTable(state.initialState);
     updateUI();
 
     // Populate initial comparison table and metrics quietly without marking state as solved
@@ -694,8 +791,6 @@
       state.currentState = state.initialState.slice();
 
       if (dom.metricTotalMoves) dom.metricTotalMoves.textContent = active.moves;
-      if (dom.metricNodesExplored) dom.metricNodesExplored.textContent = active.expanded.toLocaleString();
-      if (dom.metricExecutionTime) dom.metricExecutionTime.textContent = `${active.durationMs.toFixed(1)} ms`;
       if (dom.metricActiveHeuristic) dom.metricActiveHeuristic.textContent = active.heuristicName;
 
       renderComparisonTableAndChart(shootoutRes);
